@@ -24,6 +24,16 @@ class Router {
             $this->add('/', 'HomeController', 'index');
             $this->add('/service/{id}', 'ServiceController', 'show');
             $this->add('/admin/message/{id}', 'AdminController', 'messageDetail');
+            $this->add('/admin', 'AdminController', 'login');
+            $this->add('/admin/login', 'AdminController', 'login', 'POST');
+            $this->add('/admin/dashboard', 'AdminController', 'dashboard');
+            $this->add('/admin/content', 'AdminController', 'content');
+            $this->add('/admin/contacts', 'AdminController', 'contacts');
+            $this->add('/admin/schedule', 'AdminController', 'schedule');
+            $this->add('/admin/settings', 'AdminController', 'settings');
+            $this->add('/admin/logout', 'AdminController', 'logout');
+            $this->add('/contact', 'ContactController', 'submit', 'POST');
+            $this->add('/api/appointment-slots', 'ContactController', 'getAvailableSlots');
         }
 
         // Debug logging

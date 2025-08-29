@@ -370,7 +370,9 @@ class HomeController {
             }
 
             error_log("addDailySlots: Starting transaction for date $date");
-            $this->db->beginTransaction();
+            if (!$this->db->inTransaction()) {
+                $this->db->beginTransaction();
+            }
 
             // Generate 30-minute slots
             $start = new DateTime("$date $startTime");
@@ -399,20 +401,31 @@ class HomeController {
             }
 
             // Insert slots into database
-            $stmt = $this->db->prepare("INSERT INTO appointment_slots (start_time, end_time, is_booked, created_at, updated_at) 
-                                        VALUES (:start_time, :end_time, 0, datetime('now'), datetime('now'))");
+            $stmt = $this->db->prepare("
+                INSERT INTO appointment_slots (start_time, end_time, is_booked, created_at, updated_at) 
+                VALUES (:start_time, :end_time, 0, datetime('now'), datetime('now'))
+            ");
+            
+            $insertedCount = 0;
             foreach ($slots as $slot) {
-                $stmt->execute([
-                    ':start_time' => $slot['start_time'],
-                    ':end_time' => $slot['end_time']
-                ]);
+                // Vérifier si le slot existe déjà
+                $checkStmt = $this->db->prepare("SELECT id FROM appointment_slots WHERE start_time = ? AND end_time = ?");
+                $checkStmt->execute([$slot['start_time'], $slot['end_time']]);
+                
+                if (!$checkStmt->fetch()) {
+                    $stmt->execute([
+                        ':start_time' => $slot['start_time'],
+                        ':end_time' => $slot['end_time']
+                    ]);
+                    $insertedCount++;
+                }
             }
 
             if ($this->db->inTransaction()) {
                 error_log("addDailySlots: Committing transaction");
                 $this->db->commit();
             }
-            $_SESSION['flash_message'] = ['success' => true, 'message' => count($slots) . ' créneaux ajoutés avec succès'];
+            $_SESSION['flash_message'] = ['success' => true, 'message' => $insertedCount . ' nouveaux créneaux ajoutés avec succès'];
         } catch (Exception $e) {
             if ($this->db && $this->db->inTransaction()) {
                 error_log("addDailySlots: Rolling back transaction due to error: " . $e->getMessage());

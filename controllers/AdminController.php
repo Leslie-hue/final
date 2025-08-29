@@ -451,7 +451,7 @@ class AdminController {
         foreach ($sections as $section) {
             if (isset($_POST[$section]) && is_array($_POST[$section])) {
                 foreach ($_POST[$section] as $key => $value) {
-                    $value = trim(filter_input(INPUT_POST, $section . '[' . $key . ']', FILTER_SANITIZE_FULL_SPECIAL_CHARS));
+                    $value = trim($value);
                     $stmt = $this->db->prepare("
                         INSERT OR REPLACE INTO site_content (section, key_name, value, updated_at) 
                         VALUES (?, ?, ?, datetime('now'))
